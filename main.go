@@ -1,3 +1,13 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+// import "sync"
+
 // package main
 
 // import (
@@ -4836,21 +4846,600 @@
 // 	m.Get("name")
 // }
 
-package main
+// package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
-)
+// import (
+// 	"bufio"
+// 	"fmt"
+// 	"os"
+// 	"strconv"
+// )
 
-func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	var sum int16
+// func main() {
+// 	scanner := bufio.NewScanner(os.Stdin)
+// 	var sum int32
 
-	for scanner.Scan() {
-		num, _ := strconv.Atoi(string(scanner.Bytes()))
-		sum += num
+// 	for i := 0; i < 2; i++ {
+// 		scanner.Scan()
+// 		num, _ := strconv.Atoi(string(scanner.Bytes()))
+// 		sum += int32(num)
+// 	}
+// 	fmt.Print(sum)
+// }
+
+// package main
+
+// import (
+//     "fmt"
+//     "sort"
+// )
+
+// func main() {
+//     var s string
+//     fmt.Scan(&s)
+
+//     nums := []byte(s)
+
+//     sort.Slice(nums, func (i, j int) bool {
+//         return nums[i] < nums[j]
+//     })
+
+//     if nums[0] == '0' {
+// 		for i := 1; i < len(nums); i++ {
+// 			if nums[i] != '0' {
+// 				nums[0], nums[i] = nums[i], nums[0]
+// 				break
+// 			}
+// 		}
+// 	}
+
+// 	fmt.Print(string(nums))
+// }
+
+// package main
+
+// import (
+// 	"fmt"
+// )
+
+// const INF = 1 << 30
+
+// func main() {
+// 	var s string
+// 	fmt.Scan(&s)
+
+// 	n := len(s)
+// 	tbank := "tbank"
+// 	study := "study"
+// 	lt := len(tbank)
+// 	ls := len(study)
+
+// 	costT := make([]int, n)
+// 	for i := range costT {
+// 		costT[i] = INF
+// 	}
+// 	for i := 0; i <= n-lt; i++ {
+// 		c := 0
+// 		for k := 0; k < lt; k++ {
+// 			if s[i+k] != tbank[k] {
+// 				c++
+// 			}
+// 		}
+// 		costT[i] = c
+// 	}
+
+// 	costS := make([]int, n)
+// 	for i := range costS {
+// 		costS[i] = INF
+// 	}
+// 	for j := 0; j <= n-ls; j++ {
+// 		c := 0
+// 		for k := 0; k < ls; k++ {
+// 			if s[j+k] != study[k] {
+// 				c++
+// 			}
+// 		}
+// 		costS[j] = c
+// 	}
+
+// 	ans := INF
+
+// 	// Случай 1: tbank полностью левее study (i+lt <= j)
+// 	// Для каждого j найдём min costT[i] при i <= j-lt
+// 	minT := INF
+// 	for j := 0; j <= n-ls; j++ {
+// 		// i+lt <= j => i <= j-lt
+// 		if j-lt >= 0 && costT[j-lt] < minT {
+// 			minT = costT[j-lt]
+// 		}
+// 		if minT < INF && costS[j] < INF {
+// 			if minT+costS[j] < ans {
+// 				ans = minT + costS[j]
+// 			}
+// 		}
+// 	}
+
+// 	// Случай 2: study полностью левее tbank (j+ls <= i)
+// 	minS := INF
+// 	for i := 0; i <= n-lt; i++ {
+// 		// j+ls <= i => j <= i-ls
+// 		if i-ls >= 0 && costS[i-ls] < minS {
+// 			minS = costS[i-ls]
+// 		}
+// 		if minS < INF && costT[i] < INF {
+// 			if minS+costT[i] < ans {
+// 				ans = minS + costT[i]
+// 			}
+// 		}
+// 	}
+
+// 	// Случай 3: пересекаются
+// 	// Перебираем все пары с пересечением — но их O(n*5*5)=O(n) пар по сдвигу
+// 	// Сдвиг d = j - i, пересечение если |d| < 5
+// 	for d := -(lt - 1); d <= ls-1; d++ {
+// 		// j = i + d
+// 		for i := 0; i <= n-lt; i++ {
+// 			j := i + d
+// 			if j < 0 || j > n-ls {
+// 				continue
+// 			}
+// 			if costT[i] == INF || costS[j] == INF {
+// 				continue
+// 			}
+// 			overlapStart := max(i, j)
+// 			overlapEnd := min(i+lt, j+ls)
+
+// 			total := 0
+// 			valid := true
+
+// 			for k := i; k < i+lt; k++ {
+// 				if k < overlapStart || k >= overlapEnd {
+// 					if s[k] != tbank[k-i] {
+// 						total++
+// 					}
+// 				}
+// 			}
+// 			for k := j; k < j+ls; k++ {
+// 				if k < overlapStart || k >= overlapEnd {
+// 					if s[k] != study[k-j] {
+// 						total++
+// 					}
+// 				}
+// 			}
+// 			for k := overlapStart; k < overlapEnd; k++ {
+// 				tChar := tbank[k-i]
+// 				sChar := study[k-j]
+// 				if tChar != sChar {
+// 					valid = false
+// 					break
+// 				}
+// 				if s[k] != tChar {
+// 					total++
+// 				}
+// 			}
+
+// 			if valid && total < ans {
+// 				ans = total
+// 			}
+// 		}
+// 	}
+
+// 	fmt.Println(ans)
+// }
+
+// func max(a, b int) int {
+// 	if a > b {
+// 		return a
+// 	}
+// 	return b
+// }
+
+// func min(a, b int) int {
+// 	if a < b {
+// 		return a
+// 	}
+// 	return b
+// }
+
+// package gotasks
+
+// import (
+// 	"sync"
+// 	"time"
+// )
+
+// // начало решения
+
+// // timeit выполняет nIter вызовов функции fn
+// // с помощью nWorkers параллельных обработчиков,
+// // и возвращает время выполнения в миллисекундах.
+// func timeit(nIter int, nWorkers int, fn func()) int {
+// 	wg := sync.WaitGroup{}
+//     start := time.Now()
+
+//     // работают nWorkers параллельных обработчиков
+//     for i := 0; i < nWorkers; i++ {
+// 		wg.Add(1)
+//         go func() {
+// 			defer wg.Done()
+//             // каждый обработчик выполняет nIter/nWorkers итераций
+//             for i := 0; i < nIter/nWorkers; i++ {
+//                 fn()
+//             }
+//         }()
+//     }
+
+//     // дожидаемся завершения обработчиков
+//     wg.Wait()
+
+//     return int(time.Since(start).Milliseconds())
+// }
+
+// // конец решения
+
+// // начало решения
+
+// // ConcGroup выполняет присылаемую работу в отдельных горутинах.
+// type ConcGroup struct {
+// 	n int
+// }
+
+// // NewConcGroup создает новый экземпляр ConcGroup.
+// func NewConcGroup() *ConcGroup {
+//     return &ConcGroup{n: 0}
+// }
+
+// // Run выполняет присланную работу в отдельной горутине.
+// func (cg *ConcGroup) Run(work func()) {
+// 	cg.n++
+//     go func() {
+// 		defer func() {
+// 			cg.n--
+// 		}()
+// 		work()
+// 	}()
+// }
+
+// // Wait ожидает, пока не закончится вся выполняемая в данный момент работа.
+// func (cg *ConcGroup) Wait() {
+//     for cg.n > 0 {
+// 	}
+// }
+
+// // конец решения
+
+// начало решения
+
+// // Worker выполняет заданную функцию в цикле, пока не будет остановлен.
+// type Worker struct {
+//     fn func() error
+// 	wg sync.WaitGroup
+//     running bool
+// }
+
+// // NewWorker создает новый экземпляр Worker с заданной функцией.
+// func NewWorker(fn func() error) *Worker {
+//     return &Worker{fn: fn,
+// 		wg: sync.WaitGroup{},
+// 		running: false,
+// 	}
+// }
+
+// // Start запускает отдельную горутину, в которой циклически
+// // выполняет заданную функцию, пока не будет вызван метод Stop,
+// // либо пока функция не вернет ошибку.
+// // Повторные вызовы Start игнорируются.
+// // Гарантируется, что Start не вызывается из разных горутин.
+// func (w *Worker) Start() {
+// 	if w.running {
+// 		return
+// 	}
+//     w.running = true
+// 	w.wg.Add(1)
+//     go func() {
+// 		defer w.wg.Done()
+//         for {
+// 			if !w.running {
+// 				return
+// 			}
+//             err := w.fn()
+//             if err != nil {
+//                 return
+//             }
+//         }
+//     }()
+// }
+
+// // Stop останавливает выполнение цикла.
+// // Вызов Stop до Start игнорируется.
+// // Повторные вызовы Stop игнорируются.
+// // Гарантируется, что Stop не вызывается из разных горутин.
+// func (w *Worker) Stop() {
+//     if w.running {
+// 		w.running = false
+// 	}
+// }
+
+// // Wait блокирует вызвавшую его горутину до тех пор,
+// // пока Worker не будет остановлен (из-за ошибки или вызова Stop).
+// // Wait может вызываться несколько раз, в том числе из разных горутин.
+// // Wait может вызываться до Start. Это не приводит к блокировке.
+// // Wait может вызываться после Stop. Это не приводит к блокировке.
+// func (w *Worker) Wait() {
+// 	if w.running {
+// 		w.wg.Wait()
+// 	}
+// }
+
+// // конец решения
+
+// начало решения
+
+// ConcGroup выполняет присылаемую работу в отдельных горутинах.
+// type ConcGroup struct {
+// 	n int
+// 	recVal any
+// }
+
+// // NewConcGroup создает новый экземпляр ConcGroup.
+// func NewConcGroup() *ConcGroup {
+//     return &ConcGroup{n: 0}
+// }
+
+// // Run выполняет присланную работу в отдельной горутине.
+// // Если горутина запаниковала, Run не паникует.
+// func (cg *ConcGroup) Run(work func()) {
+// 	cg.n++
+//     go func() {
+// 		defer func() {
+// 			cg.recVal = recover()
+// 			cg.n--
+// 		}()
+// 		work()
+// 	}()
+// }
+
+// // Wait ожидает, пока не закончится вся выполняемая в данный момент работа.
+// // Если запаниковала хотя бы одна из горутин, запущенных через Run -
+// // Wait тоже паникует.
+// func (cg *ConcGroup) Wait() {
+//     for cg.n >= 0 {
+// 		if cg.n == 0 {
+// 			if cg.recVal != nil {
+// 				panic(cg.recVal)
+// 			}
+// 		}
+// 	}
+// }
+//package main
+
+// import (
+// 	"fmt"
+
+// 	"runtime"
+
+// 	"sync"
+// )
+
+// func main() {
+
+// 	m := []int{1, 2, 3, 4, 5}
+
+// 	wg := sync.WaitGroup{}
+
+// 	runtime.GOMAXPROCS(1)
+
+// 	wg.Add(len(m))
+
+// 	for _, i := range m {
+
+// 		go func() {
+
+// 			defer wg.Done()
+
+// 			fmt.Println(i)
+
+// 		}()
+
+// 	}
+
+// 	wg.Wait()
+
+// }
+
+// // начало решения
+
+// // Counter представляет безопасную карту частот слов.
+// // Ключ - строка, значение - целое число.
+// type Counter struct {
+// 	counterMap map[string]int
+// 	lock sync.RWMutex
+// }
+
+// // Increment увеличивает значение по ключу на 1.
+// func (c *Counter) Increment(str string) {
+//     c.lock.Lock()
+// 	defer c.lock.Unlock()
+// 	c.counterMap[str]++
+// }
+
+// // Value возвращает значение по ключу.
+// func (c *Counter) Value(str string) int {
+//     c.lock.RLock()
+// 	defer c.lock.RUnlock()
+// 	return c.counterMap[str]
+// }
+
+// // Range проходит по всем записям карты,
+// // и для каждой вызывает функцию fn, передавая в нее ключ и значение.
+// func (c *Counter) Range(fn func(key string, val int)) {
+//     c.lock.RLock()
+// 	defer c.lock.RUnlock()
+// 	for k, v := range c.counterMap {
+// 		fn(k, v)
+// 	}
+// }
+
+// // NewCounter создает новую карту частот.
+// func NewCounter() *Counter {
+//     return &Counter{counterMap: map[string]int{}}
+// }
+
+// // конец решения
+
+// // ConcMap - безопасная в многозадачной среде карта.
+// type ConcMap[K comparable, V any] struct {
+//     items map[K]V
+//     lock  sync.Mutex
+// }
+
+// // NewConcMap создает новую карту.
+// func NewConcMap[K comparable, V any]() *ConcMap[K, V] {
+//     return &ConcMap[K, V]{items: map[K]V{}}
+// }
+
+// // Get возвращает значение по ключу.
+// func (cm *ConcMap[K, V]) Get(key K) V {
+//     cm.lock.Lock()
+//     defer cm.lock.Unlock()
+//     return cm.items[key]
+// }
+
+// // Set устанавливает значение по ключу.
+// func (cm *ConcMap[K, V]) Set(key K, val V) {
+//     cm.lock.Lock()
+//     defer cm.lock.Unlock()
+//     cm.items[key] = val
+// }
+
+// // начало решения
+
+// // SetIfAbsent устанавливает новое значение по ключу
+// // и возвращает его, но только если такого ключа нет в карте.
+// // Если ключ уже есть - возвращает старое значение по ключу.
+// func (cm *ConcMap[K, V]) SetIfAbsent(key K, val V) V {
+//     cm.lock.Lock()
+//     defer cm.lock.Unlock()
+//     if oldval, ok := cm.items[key]; ok {
+//         return oldval
+//     }
+// 	cm.items[key] = val
+//     return val
+// }
+
+// // Compute устанавливает значение по ключу, применяя к нему функцию.
+// // Возвращает новое значение. Функция выполняется атомарно.
+// func (cm *ConcMap[K, V]) Compute(key K, f func(V) V) V {
+// 	cm.lock.Lock()
+//     defer cm.lock.Unlock()
+// 	f(cm.items[key])
+//     return cm.items[key]
+// }
+
+// // конец решения
+
+// func main() {
+
+// counter := sync.Map{}
+// var wg sync.WaitGroup
+
+// wg.Go(func() {
+//     for range 100 {
+//         count, _ := counter.LoadOrStore("hello", 0)
+//         counter.Store("hello", count.(int)+1)
+//     }
+// })
+
+// wg.Go(func() {
+//     for range 100 {
+//         count, _ := counter.LoadOrStore("hello", 0)
+//         counter.Store("hello", count.(int)+1)
+//     }
+// })
+
+// wg.Wait()
+// count, _ := counter.Load("hello")
+// fmt.Println("hello =", count.(int))
+// }
+
+// И handle, и cancel могут вызываться одновременно из разных горутин.
+// fn выполняется синхронно (в той же горутине, что вызвала handle).
+// handle может быть вызвана после того, как выполнилась cancel. Тогда она должна вернуть ошибку ErrCanceled.
+// cancel должна освободить ресурсы, занятые ограничителем (если такие есть).
+// cancel может быть вызвана несколько раз. Тогда в первый раз она должна остановить ограничитель, а в последующие — ничего не делать.
+// начало решения
+var ErrBusy = errors.New("busy")
+var ErrCanceled = errors.New("canceled")
+
+// throttle следит, чтобы функция fn выполнялась не более limit раз в секунду.
+// Возвращает функции handle (выполняет fn с учетом лимита) и cancel (останавливает ограничитель).
+func throttle(limit int, fn func()) (handle func() error, cancel func()) {
+	limitChan := make(chan struct{}, limit)
+	canceled := make(chan struct{})
+
+	handle = func() error {
+		select {
+		case limitChan <- struct{}{}:
+			select {
+			case <-canceled:
+				return ErrCanceled
+			default:
+				go fn()
+			}
+		case <-canceled:
+			return ErrCanceled
+		default:
+			return ErrBusy
+		}
+		return nil
 	}
+
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				for len(limitChan) > 0 {
+					<-limitChan
+				}
+			case <-canceled:
+				return
+			}
+		}
+	}()
+
+	cancel = func() {
+		select {
+		case <-canceled:
+			return
+		default:
+			close(canceled)
+		}
+	}
+
+	return handle, cancel
+}
+
+// конец решения
+func main() {
+	work := func() {
+		fmt.Print(".")
+	}
+
+	handle, cancel := throttle(5, work)
+	defer cancel()
+
+	const n = 8
+	var nOK, nErr int
+	for i := 0; i < n; i++ {
+		err := handle()
+		if err == nil {
+			nOK += 1
+		} else {
+			nErr += 1
+		}
+	}
+	fmt.Println()
+	fmt.Printf("%d calls: %d OK, %d busy\n", n, nOK, nErr)
 }
