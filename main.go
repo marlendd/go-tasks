@@ -1,10 +1,6 @@
 package main
 
-import (
-	"errors"
-	"fmt"
-	"time"
-)
+//import "fmt"
 
 // import "sync"
 
@@ -5368,78 +5364,900 @@ import (
 // cancel должна освободить ресурсы, занятые ограничителем (если такие есть).
 // cancel может быть вызвана несколько раз. Тогда в первый раз она должна остановить ограничитель, а в последующие — ничего не делать.
 // начало решения
-var ErrBusy = errors.New("busy")
-var ErrCanceled = errors.New("canceled")
+// var ErrBusy = errors.New("busy")
+// var ErrCanceled = errors.New("canceled")
 
-// throttle следит, чтобы функция fn выполнялась не более limit раз в секунду.
-// Возвращает функции handle (выполняет fn с учетом лимита) и cancel (останавливает ограничитель).
-func throttle(limit int, fn func()) (handle func() error, cancel func()) {
-	limitChan := make(chan struct{}, limit)
-	canceled := make(chan struct{})
+// // throttle следит, чтобы функция fn выполнялась не более limit раз в секунду.
+// // Возвращает функции handle (выполняет fn с учетом лимита) и cancel (останавливает ограничитель).
+// func throttle(limit int, fn func()) (handle func() error, cancel func()) {
+// 	limitChan := make(chan struct{}, limit)
+// 	canceled := make(chan struct{})
 
-	handle = func() error {
-		select {
-		case limitChan <- struct{}{}:
-			select {
-			case <-canceled:
-				return ErrCanceled
-			default:
-				go fn()
-			}
-		case <-canceled:
-			return ErrCanceled
-		default:
-			return ErrBusy
-		}
-		return nil
-	}
+// 	handle = func() error {
+// 		select {
+// 		case limitChan <- struct{}{}:
+// 			select {
+// 			case <-canceled:
+// 				return ErrCanceled
+// 			default:
+// 				go fn()
+// 			}
+// 		case <-canceled:
+// 			return ErrCanceled
+// 		default:
+// 			return ErrBusy
+// 		}
+// 		return nil
+// 	}
 
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				for len(limitChan) > 0 {
-					<-limitChan
-				}
-			case <-canceled:
-				return
-			}
-		}
-	}()
+// 	go func() {
+// 		ticker := time.NewTicker(time.Second)
+// 		defer ticker.Stop()
+// 		for {
+// 			select {
+// 			case <-ticker.C:
+// 				for len(limitChan) > 0 {
+// 					<-limitChan
+// 				}
+// 			case <-canceled:
+// 				return
+// 			}
+// 		}
+// 	}()
 
-	cancel = func() {
-		select {
-		case <-canceled:
-			return
-		default:
-			close(canceled)
-		}
-	}
+// 	cancel = func() {
+// 		select {
+// 		case <-canceled:
+// 			return
+// 		default:
+// 			close(canceled)
+// 		}
+// 	}
 
-	return handle, cancel
-}
+// 	return handle, cancel
+// }
 
-// конец решения
-func main() {
-	work := func() {
-		fmt.Print(".")
-	}
+// // конец решения
+// func main() {
+// 	work := func() {
+// 		fmt.Print(".")
+// 	}
 
-	handle, cancel := throttle(5, work)
-	defer cancel()
+// 	handle, cancel := throttle(5, work)
+// 	defer cancel()
 
-	const n = 8
-	var nOK, nErr int
-	for i := 0; i < n; i++ {
-		err := handle()
-		if err == nil {
-			nOK += 1
-		} else {
-			nErr += 1
-		}
-	}
-	fmt.Println()
-	fmt.Printf("%d calls: %d OK, %d busy\n", n, nOK, nErr)
-}
+// 	const n = 8
+// 	var nOK, nErr int
+// 	for i := 0; i < n; i++ {
+// 		err := handle()
+// 		if err == nil {
+// 			nOK += 1
+// 		} else {
+// 			nErr += 1
+// 		}
+// 	}
+// 	fmt.Println()
+// 	fmt.Printf("%d calls: %d OK, %d busy\n", n, nOK, nErr)
+// }
+
+// // начало решения
+
+// // Semaphore представляет семафор синхронизации.
+// type Semaphore chan struct{}
+
+// // NewSemaphore создает новый семафор указанной вместимости.
+// func NewSemaphore(n int) Semaphore {
+// 	return make(Semaphore, n)
+// }
+
+// // Acquire занимает место в семафоре, если есть свободное.
+// // В противном случае блокирует вызывающую горутину.
+// func (s Semaphore) Acquire() {
+// 	s <- struct{}{}
+// }
+
+// // Release освобождает место в семафоре и разблокирует
+// // одну из заблокированных горутин (если такие были).
+// func (s Semaphore) Release() {
+// 	<-s
+// }
+
+// // конец решения
+
+// // TryAcquire занимает место в семафоре, если есть свободное,
+// // и возвращает true. В противном случае просто возвращает false.
+// func (s Semaphore) TryAcquire() bool {
+// 	select {
+// 	case s <- struct{}{}:
+// 		return true
+// 	default:
+// 		return false
+// 	}
+// }
+
+// type ListNode struct {
+// 	Val  int
+// 	Next *ListNode
+// }
+
+// func hasCycle(head *ListNode) bool {
+// 	slow, fast := head, head
+// 	for fast.Next != nil && fast.Next.Next != nil {
+// 		fast = fast.Next.Next
+// 		slow = slow.Next
+// 		if fast == slow {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
+
+// func main() {
+// 	m := map[string]int{"a": 1, "b": 2, "c": 3}
+// 		fmt.Println(m)
+// 	var line string
+// 	str := f(line)
+// 	println(str)
+// }
+
+// func f(str string) *string {
+// 	str += "abc"
+// 	return &str
+// }
+
+// type ValidationError struct {
+// 	Field   string
+// 	Message string
+// }
+
+// func (e *ValidationError) Error() string {
+// 	return fmt.Sprintf("ошибка в поле %s: %s", e.Field, e.Message)
+// }
+
+// func ValidateRequest(req string) error {
+// 	if req == "" {
+// 		return &ValidationError{Field: "username", Message: "не может быть пустым"}
+// 	}
+// 	return nil // Возвращаем явный nil
+// }
+
+// func Process() error {
+// 	return ValidateRequest("") // Здесь всё ок, вернет ошибку
+// }
+
+// func ProcessValid() error {
+// 	return ValidateRequest("Vadim") // Передали валидные данные, вернет nil
+// }
+
+// func main() {
+// 	err := ProcessValid()
+// 	if err != nil {
+// 		fmt.Println("Программа думает, что произошла ошибка:", err)
+// 	} else {
+// 		fmt.Println("Всё прошло успешно!")
+// 	}
+// }
+
+// type Operation string
+// var (
+// 	ParseOperation Operation
+// 	ValidateOperation Operation
+// 	ApplyOperation Operation
+
+// 	ErrNetworkTimeout = errors.New("network timeout")
+// 	ErrInvalidSyntax  = errors.New("invalid syntax in xml")
+// )
+
+// type OamError struct {
+// 	Op Operation
+// 	Err error
+// 	IsCritical bool
+// }
+
+// func (oe *OamError) Error() string {
+// 	return fmt.Sprintf("got error: %s, critical: %v", oe.Err, oe.IsCritical)
+// }
+
+// func (oe *OamError) Unwrap() error {
+// 	return oe.Err
+// }
+
+// func parseConfig() error {
+// 	// Имитируем ошибку парсинга. Она критическая (битый файл).
+// 	return &OamError{Op: ParseOperation, IsCritical: true, Err: ErrInvalidSyntax}
+// }
+
+// func applyToHardware() error {
+// 	// Имитируем ошибку сети. Она НЕ критическая (можно повторить).
+// 	return &OamError{Op: ApplyOperation, IsCritical: false, Err: ErrNetworkTimeout}
+// }
+
+// func ExecuteDeployment(step func() error) string {
+// 	err := step()
+// 	if err == nil {
+// 		return "ACTION: SUCCESS"
+// 	}
+// 	var oamErr *OamError
+// 	if errors.As(err, &oamErr) {
+// 		if oamErr.IsCritical {
+// 			return "ACTION: ABORT"
+// 		}
+// 		return "ACTION: RETRY"
+// 	}
+
+// 	return "ACTION: UNKNOWN"
+// }
+
+// func main() {
+// 	// Проверка кейса 1: Критическая ошибка
+// 	res1 := ExecuteDeployment(parseConfig)
+// 	fmt.Println("Тест 1 (Должен быть ABORT):", res1)
+
+// 	// Проверка кейса 2: Ошибка, которую можно повторить
+// 	res2 := ExecuteDeployment(applyToHardware)
+// 	fmt.Println("Тест 2 (Должен быть RETRY):", res2)
+// }
+
+// type Metric struct {
+// 	Value int
+// }
+
+// func calculate() (m *Metric) {
+// 	m = &Metric{Value: 10}
+
+// 	// Стек деферов
+// 	defer func() {
+// 		m.Value += 5 // 3:+5
+// 	}()
+
+// 	defer func(m *Metric) {
+// 		m.Value *= 2 // не повлияет, тк ptr устарел
+// 	}(m)
+
+// 	// Цикл с деферами
+// 	for i := 0; i < 2; i++ {
+// 		defer func() {
+// 			m.Value += i // 1:+1 2:+0
+// 		}()
+// 	}
+
+// 	m = &Metric{Value: 100} // новый ptr
+
+// 	return m
+// }
+
+// func main() {
+// 	result := calculate()
+// 	fmt.Println("Final Metric Value:", result.Value) // 106
+// }
+
+// начало решения
+
+// Rendezvous представляет рандеву двух горутин.
+// type Rendezvous struct {
+// 	wg *sync.WaitGroup
+// }
+
+// // NewRendezvous создает новое рандеву.
+// func NewRendezvous() *Rendezvous {
+// 	wg := &sync.WaitGroup{}
+// 	wg.Add(2)
+//     return &Rendezvous{wg}
+// }
+
+// // Ready фиксирует, что вызывающая горутина прибыла к точке сбора.
+// // Блокирует вызывающую горутину, пока не прибудет вторая.
+// // Когда обе горутины прибудут, Ready их разблокирует.
+// func (r *Rendezvous) Ready() {
+//     r.wg.Done()
+// 	r.wg.Wait()
+// }
+
+// // конец решения
+
+// начало решения
+
+// // Barrier представляет барьер синхронизации.
+// type Barrier struct {
+// 	wg *sync.WaitGroup
+// 	n int
+// }
+
+// // NewBarrier создает новый барьер с указанным порогом.
+// func NewBarrier(n int) *Barrier {
+//     wg := &sync.WaitGroup{}
+// 	wg.Add(n)
+// 	return &Barrier{wg: wg, n: n}
+// }
+
+// // Touch фиксирует, что вызывающая горутина достигла барьера.
+// // Если барьера достигли меньше n горутин, Touch блокирует вызывающую горутину.
+// // Когда n горутин достигнут барьера, Touch разблокирует их все.
+// func (b *Barrier) Touch() {
+//     b.wg.Done()
+// 	b.wg.Wait()
+// }
+
+// // конец решения
+
+// начало решения
+
+// Queue - блокирующая FIFO-очередь.
+// type Queue struct {
+//     // TODO: переделать на срез и sync.Cond.
+//     items []int
+// 	c *sync.Cond
+// }
+
+// // NewQueue создает новую очередь.
+// func NewQueue() *Queue {
+//     // TODO: очередь должна быть безразмерной.
+//     return &Queue{c: sync.NewCond(&sync.Mutex{})}
+// }
+
+// // Put добавляет элемент в очередь.
+// // Поскольку очередь безразмерная, никогда не блокируется.
+// func (q *Queue) Put(item int) {
+// 	q.c.L.Lock()
+//     q.items = append(q.items, item)
+// 	q.c.Signal()
+// 	q.c.L.Unlock()
+// }
+
+// // Get извлекает элемент из очереди.
+// // Если очередь пуста, блокируется до момента,
+// // пока в очереди не появится элемент.
+// func (q *Queue) Get() int {
+// 	q.c.L.Lock()
+// 	defer q.c.L.Unlock()
+
+//     for len(q.items) == 0 {
+// 		q.c.Wait()
+// 	}
+// 	res := q.items[0]
+// 	q.items = q.items[1:]
+// 	return res
+// }
+
+// // Len возвращает количество элементов в очереди.
+// func (q *Queue) Len() int {
+//     return len(q.items)
+// }
+
+// // конец решения
+
+// начало решения
+
+// Barrier представляет барьер синхронизации.
+// type Barrier struct {
+//     c *sync.Cond
+// 	n int // limit of gs
+// 	g int // waiting goroutins
+//     unlocked bool
+// }
+
+// // NewBarrier создает новый барьер с указанным порогом.
+// func NewBarrier(n int) *Barrier {
+//     return &Barrier{c: sync.NewCond(&sync.Mutex{}), n: n}
+// }
+
+// // Touch фиксирует, что вызывающая горутина достигла барьера.
+// // Если барьера достигли меньше n горутин, Touch блокирует вызывающую горутину.
+// // Когда n горутин достигнут барьера, Touch разблокирует их все.
+// // Если барьер уже разблокирован, Touch не блокирует вызывающую горутину.
+// func (b *Barrier) Touch() {
+//     b.c.L.Lock()
+// 	defer b.c.L.Unlock()
+// 	if b.n == b.g {
+// 		b.c.Broadcast()
+// 		b.unlocked = true
+// 		return
+// 	}
+// 	if !b.unlocked {
+// 		b.g++
+// 		b.c.Wait()
+// 	}
+// }
+
+// // конец решения
+// начало решения
+
+// Game представляет игру.
+// начало решения
+
+// Total представляет атомарный счетчик.
+// type Total struct {
+//     cnt atomic.Int64
+// }
+
+// // Increment увеличивает счетчик на 1.
+// func (t *Total) Increment() {
+//     t.cnt.Add(1)
+// }
+
+// // Value возвращает значение счетчика.
+// func (t *Total) Value() int {
+//     return int(t.cnt.Load())
+// }
+
+// конец решени
+//
+// я
+// // начало решения
+
+// // External представляет внешний сервис.
+// type External struct {
+//     lastCall atomic.Value
+//     numCalls atomic.Int32
+// }
+
+// // NewExternal создает новый экземпляр External.
+// func NewExternal() *External {
+//     return &External{}
+// }
+
+// // Call вызывает внешний сервис.
+// func (e *External) Call() {
+//     // вызываем внешний сервис...
+//     e.lastCall.Store(time.Now())
+//     e.numCalls.Add(1)
+// }
+
+// // LastCall возвращает время последнего вызова.
+// func (e *External) LastCall() time.Time {
+//     return e.lastCall.Load().(time.Time)
+// }
+
+// // NumCalls возвращает количество вызовов.
+// func (e *External) NumCalls() int {
+//     return int(e.numCalls.Load())
+// }
+
+// // конец решения
+
+// начало решения
+
+// Stack представляет конкурентно-безопасный стек без блокировок.
+// type Stack struct {
+//     top atomic.Pointer[Node]
+// }
+
+// // Node представляет элемент стека.
+// type Node struct {
+//     val  *atomic.Int64
+//     next *Node
+// }
+
+// // Push добавляет значение на вершину стека.
+// func (s *Stack) Push(val int) {
+// 	for {
+// 		newVal := atomic.Int64{}
+// 		newVal.Store(int64(val))
+// 		node := &Node{val: &newVal, next: s.top.Load()}
+// 		if s.top.CompareAndSwap(node.next, node) {
+// 			return
+// 		}
+// 	}
+// }
+
+// // Pop удаляет и возвращает вершину стека.
+// // Если стек пуст, возвращает false.
+// func (s *Stack) Pop() (int, bool) {
+// 	for {
+// 		top := s.top.Load()
+// 		if top == nil {
+// 			return 0, false // стек пуст
+// 		}
+// 		if s.top.CompareAndSwap(top, top.next) {
+// 			return int(top.val.Load()), true
+// 		}
+// 	}
+// }
+
+// // конец решения
+
+// func mergeChannels(doneCh chan struct{}, channels ...chan int) chan int {
+// 	mergedChan := make(chan int)
+// 	var wg sync.WaitGroup
+
+// 	for _, ch := range channels {
+// 		wg.Go(func() {
+// 			for val := range ch {
+// 				select{
+// 				case <-doneCh:
+// 					return
+// 				case mergedChan <- val:
+// 				}
+// 			}
+// 		})
+// 	}
+
+// 	go func ()  {
+// 		wg.Wait()
+// 		close(mergedChan)
+// 	}()
+// 	return mergedChan
+// }
+
+// func fanOut(doneCh chan struct{}, input chan int, workers int) []chan int {
+// 	chans := make([]chan int, workers)
+
+// 	for i := range workers {
+// 		chans = append(chans, )
+// 	}
+// }
+
+// func worker(id int, jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
+// 	defer wg.Done()
+// 	for job := range jobs {
+// 		fmt.Printf("worker %d started job\n", id)
+// 		time.Sleep(time.Second)
+// 		fmt.Printf("worker %d finished job\n", id)
+// 		results <- job
+// 	}
+// }
+
+// func main() {
+// 	nJobs := 5
+// 	var wg sync.WaitGroup
+
+// 	jobs := make(chan int, nJobs)
+// 	results := make(chan int, nJobs)
+
+// 	for i := range 3 {
+// 		wg.Add(1)
+// 		go worker(i, jobs, results, &wg)
+// 	}
+
+// 	for i := range nJobs {
+// 		jobs <- i
+// 	}
+
+// 	close(jobs)
+// 	go func() {
+// 		wg.Wait()
+// 		close(results)
+// 	}()
+
+// 	for res := range results {
+// 		fmt.Printf("result: %v\n", res)
+// 	}
+// }
+
+
+// type Metric struct {
+// 	Value int
+// }
+
+// func calculate() (m *Metric) {
+// 	m = &Metric{Value: 10}
+
+// 	// Стек деферов
+// 	defer func() {
+// 		m.Value += 5
+// 	}()
+
+// 	defer func(m *Metric) {
+// 		m.Value *= 2
+// 	}(m)
+
+// 	// Цикл с деферами
+// 	for i := 0; i < 2; i++ {
+// 		defer func() {
+// 			m.Value += i
+// 		}()
+// 	}
+
+// 	m = &Metric{Value: 100}
+
+// 	return m
+// }
+
+// func main() {
+// 	result := calculate()
+// 	fmt.Println("Final Metric Value:", result.Value)
+// }
+
+// // начало решения
+
+// func TestPipeline(t *testing.T) {
+//     tests := []struct {
+//         name  string
+//         start int
+//         stop  int
+//         want  Total
+//     }{
+//         {
+//             name: "name",
+//             start: 0,
+//             stop: 8,
+//             want: Total{
+//                 sum: 7,
+//                 count: 1,
+//             },
+//         },
+//     }
+
+//     for _, test := range tests {
+//         t.Run(test.name, func(t *testing.T) {
+//             // 1. Собираем конвейер из GenNums + TakeLucky + SumNums.
+//             got := SumNums(TakeLucky(GenNums(test.start, test.stop)))
+//             // 2. Получаем фактический результат.
+//             // 3. Сравниваем с ожидаемым результатом.
+//             if got != test.want {
+//                 t.Errorf("SumNums(%v) = %v; want: %v", test.input, got, test.want)
+//             }
+//         })
+//     }
+
+//     checkState(t, tests) // не удаляйте
+// }
+
+// // конец решения
+
+// Симулятор рантайма Go.
+
+
+// // максимальное время непрерывного выполнения горутины на потоке
+// const maxRunDur = 100
+
+// // статус горутины
+// type gStatus string
+
+// // статусы горутин
+// var (
+// 	statusRunnable gStatus = "runnable" // готова к выполнению
+// 	statusRunning  gStatus = "running"  // выполняется на потоке
+// 	statusWaiting  gStatus = "waiting"  // заблокирована
+// 	statusDead     gStatus = "dead"     // завершилась
+// )
+
+// // Goroutine представляет горутину.
+// type Goroutine struct {
+// 	id     int     // идентификатор, нумерация с 1
+// 	runDur int     // время в состоянии running
+// 	status gStatus // статус
+// }
+
+// // Block переводит горутину в состояние waiting.
+// func (g *Goroutine) Block() {
+// 	if g.status != statusRunning {
+// 		panic("invalid status for block: " + g.status)
+// 	}
+// 	g.status = statusWaiting
+// }
+
+// // Unblock переводит горутину в состояние runnable.
+// func (g *Goroutine) Unblock() {
+// 	if g.status != statusWaiting {
+// 		panic("invalid status for unblock: " + g.status)
+// 	}
+// 	g.status = statusRunnable
+// }
+
+// // Done переводит горутину в состояние dead.
+// func (g *Goroutine) Done() {
+// 	if g.status != statusRunning {
+// 		panic("invalid status for done: " + g.status)
+// 	}
+// 	g.status = statusDead
+// }
+
+// // Thread представляет поток операционной системы.
+// type Thread struct {
+// 	id   int        // идентификатор, нумерация с 1
+// 	goro *Goroutine // горутина на выполнении
+// }
+
+// // RuntimeState представляет состояние рантайма.
+// type RuntimeState struct {
+// 	dur      int         // общее время выполнения
+// 	threads  map[int]int // ключ - id потока, значение - id горутины (0 - поток свободен)
+// 	runnable []int       // id горутин в очереди на выполнение
+// 	running  []int       // id горутин на выполнении
+// 	waiting  []int       // id заблокированных горутин
+// 	dead     []int       // id завершенных горутин
+// }
+
+// // Runtime представляет симулятор рантайма.
+// type Runtime struct {
+// 	dur      int          // общее время выполнения
+// 	nGoro    int          // счетчик горутин
+// 	threads  []*Thread    // потоки
+// 	runnable []*Goroutine // горутины в очереди на выполнение
+// 	running  []*Goroutine // горутины на выполнении
+// 	waiting  []*Goroutine // заблокированные горутины
+// 	dead     []*Goroutine // завершенные горутины
+// }
+
+// // NewRuntime создает новый рантайм на gomaxprocs потоках.
+// func NewRuntime(gomaxprocs int) *Runtime {
+// 	threads := make([]*Thread, gomaxprocs)
+// 	for i := range gomaxprocs {
+// 		threads[i] = &Thread{id: i + 1}
+// 	}
+// 	return &Runtime{threads: threads}
+// }
+
+// // Go создает новую горутину в рантайме.
+// func (r *Runtime) Go() *Goroutine {
+// 	r.nGoro++
+// 	g := &Goroutine{id: r.nGoro, status: statusRunnable}
+// 	r.runnable = append(r.runnable, g)
+// 	return g
+// }
+
+// // начало решения
+
+// // Forward двигает время вперед на dur единиц.
+// func (r *Runtime) Forward(dur int) {
+// 	r.dur += dur
+// 	// TODO: увеличиваем время выполнения горутин в состоянии running
+//     for _, g := range r.running {
+//         g.runDur += dur
+//     }
+// }
+// /*
+// Каждый свободный поток получает очередную горутину из списка runnable. 
+// При этом горутина переходит в состояние running. Горутины из runnable выбираются в порядке FIFO (first in, first out).
+
+// Если горутина выполняется дольше maxRunDur (= 100 единиц времени), она вытесняется с потока и возвращается в конец списка runnable. При этом горутина переходит в состояние runnable.
+// Если горутина заблокировалась, она вытесняется с потока и добавляется в список waiting.
+// Если горутина завершилась, она вытесняется с потока и добавляется в список dead.
+// Если горутина разблокировалась, она возвращается в конец списка runnable.
+// Создавать новые потоки или удалять существующие не следует.
+// */
+
+// // Schedule планирует выполнение горутин.
+// func (r *Runtime) Schedule() {
+// 	// TODO: актуализируем состояние горутин, потоков и рантайма
+// 	// в соответствии с правилами работы планировщика.
+// 	keepWaitingIdx := 0
+// 	for _, g := range r.waiting {
+// 		if g.status == statusRunnable {
+// 			r.runnable = append(r.runnable, g)
+// 		} else {
+// 			r.waiting[keepWaitingIdx] = g
+// 			keepWaitingIdx++
+// 		}
+// 	}
+// 	for i := keepWaitingIdx; i < len(r.waiting); i++ {
+// 		r.waiting[i] = nil
+// 	}
+// 	r.waiting = r.waiting[:keepWaitingIdx]
+
+// 	for _, t := range r.threads {
+// 		if t.goro == nil {
+// 			continue
+// 		}
+
+// 		g := t.goro
+
+// 		if g.status == statusWaiting {
+// 			t.goro.runDur = 0
+// 			r.waiting = append(r.waiting, g)
+// 			t.goro = nil
+// 			continue
+// 		}
+
+// 		if g.status == statusDead {
+//             g.runDur = 0
+//             r.dead = append(r.dead, g)
+//             t.goro = nil
+//             continue
+//         }
+
+// 		if g.status == statusRunning && g.runDur >= maxRunDur {
+// 			g.status = statusRunnable
+// 			g.runDur = 0
+// 			r.runnable = append(r.runnable, g)
+// 			t.goro = nil
+// 			continue
+// 		}
+// 	}
+
+// 	for _, t := range r.threads {
+// 		if t.goro == nil && len(r.runnable) > 0 {
+// 			t.goro = r.runnable[0]
+// 			r.runnable = r.runnable[1:]
+// 			t.goro.status = statusRunning
+// 			t.goro.runDur = 0
+// 		}
+// 	}
+
+// 	r.running = nil
+//     for _, t := range r.threads {
+//         if t.goro != nil {
+//             r.running = append(r.running, t.goro)
+//         }
+//     }
+// }
+
+// // конец решения
+
+// // State возвращает текущее состояние рантайма.
+// func (r *Runtime) State() RuntimeState {
+// 	threads := make(map[int]int)
+// 	for _, t := range r.threads {
+// 		if t.goro != nil {
+// 			threads[t.id] = t.goro.id
+// 		} else {
+// 			threads[t.id] = 0
+// 		}
+// 	}
+// 	runnable := make([]int, len(r.runnable))
+// 	for i, g := range r.runnable {
+// 		runnable[i] = g.id
+// 	}
+// 	running := make([]int, len(r.running))
+// 	for i, g := range r.running {
+// 		running[i] = g.id
+// 	}
+// 	waiting := make([]int, len(r.waiting))
+// 	for i, g := range r.waiting {
+// 		waiting[i] = g.id
+// 	}
+// 	dead := make([]int, len(r.dead))
+// 	for i, g := range r.dead {
+// 		dead[i] = g.id
+// 	}
+// 	return RuntimeState{
+// 		dur:      r.dur,
+// 		threads:  threads,
+// 		runnable: runnable,
+// 		running:  running,
+// 		waiting:  waiting,
+// 		dead:     dead,
+// 	}
+// }
+
+// func main() {
+// 	// создаем рантайм на 2 потока
+// 	r := NewRuntime(2)
+
+// 	// создаем 4 горутины
+// 	g1 := r.Go()
+// 	g2 := r.Go()
+// 	r.Go()
+// 	r.Go()
+// 	r.Schedule()
+
+// 	// прошло 10 единиц времени, g1 завершила выполнение, g2 заблокирована
+// 	r.Forward(10)
+// 	g1.Done()
+// 	g2.Block()
+// 	r.Schedule()
+
+// 	// выводим текущее состояние рантайма
+// 	state := r.State()
+// 	fmt.Printf("%+v\n", state)
+// 	// {dur:10 threads:map[1:3 2:4] runnable:[] running:[3 4] waiting:[2] dead:[1]}
+// }
+
+// Альфа.
+
+// import (
+// 	"sync"
+// )
+
+// func main() {
+// 	const nGoro = 10
+// 	const nOps = 100000
+
+// 	var total int
+// 	var mu sync.Mutex
+// 	var wg sync.WaitGroup
+
+// 	for range nGoro {
+// 		wg.Go(func() {
+// 			for range nOps {
+// 				mu.Lock()
+// 				total++
+// 				mu.Unlock()
+// 			}
+// 		})
+// 	}
+
+// 	wg.Wait()
+// 	fmt.Println("total =", total)
+// }
