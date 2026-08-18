@@ -71,7 +71,6 @@
 go run game.go
 go run conveyor.go
 go run httpGet.go
-# и т.д.
 ```
 
 ## Требования
