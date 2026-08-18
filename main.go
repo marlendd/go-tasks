@@ -1,5 +1,9 @@
 package main
 
+import (
+
+)
+
 //import "fmt"
 
 // import "sync"
@@ -5924,7 +5928,6 @@ package main
 // 	}
 // }
 
-
 // type Metric struct {
 // 	Value int
 // }
@@ -5996,7 +5999,6 @@ package main
 // // конец решения
 
 // Симулятор рантайма Go.
-
 
 // // максимальное время непрерывного выполнения горутины на потоке
 // const maxRunDur = 100
@@ -6098,7 +6100,7 @@ package main
 //     }
 // }
 // /*
-// Каждый свободный поток получает очередную горутину из списка runnable. 
+// Каждый свободный поток получает очередную горутину из списка runnable.
 // При этом горутина переходит в состояние running. Горутины из runnable выбираются в порядке FIFO (first in, first out).
 
 // Если горутина выполняется дольше maxRunDur (= 100 единиц времени), она вытесняется с потока и возвращается в конец списка runnable. При этом горутина переходит в состояние runnable.
@@ -6260,4 +6262,78 @@ package main
 
 // 	wg.Wait()
 // 	fmt.Println("total =", total)
+// }
+
+// func removeDuplicates(nums []int) int {
+//     // unique := append(nums, nums...)
+// 	seen := make(map[int]struct{})
+
+// 	k := len(nums)
+//     for i := 0; i < k; i++ {
+// 		if _, existsts := seen[nums[i]]; existsts {
+// 			//t := nums[i]
+// 			for j := i; j < len(nums)-1; j++ {
+// 				nums[j] = nums[j+1]
+// 			}
+// 			k--
+// 			i--
+// 		}
+// 		seen[nums[i]] = struct{}{}
+// 	}
+// 	return k
+// }
+
+// func removeDuplicates(nums []int) int {
+//     l := 0
+//     for r := range nums {
+//         if nums[l] != nums[r] {
+//             nums[l + 1] = nums[r]
+//             l++
+//         }
+//     }
+//     return l + 1
+// }
+
+
+
+// func main() {
+// 	in := bufio.NewReader(os.Stdin)
+//     var s string
+//     fmt.Fscan(in, &s)
+
+//     stack := make([]rune, 0, len(s))
+
+//     pairs := map[rune]rune{
+// 		')': '(',
+// 		']': '[',
+// 		'}': '{',
+// 	}
+    
+//     // {[{(())}]}
+//     for _, ch := range s {
+//         switch ch {
+//         case '(', '{', '[':
+//             stack = append(stack, ch)
+
+//         case ')', '}', ']':
+//             if len(stack) == 0 {
+//                 fmt.Print("false")
+//                 return
+//             }
+
+//             top := stack[len(stack)-1]
+//             if top != pairs[ch] {
+//                 fmt.Print("false")
+//                 return
+//             }
+
+//             stack = stack[:len(stack)-1]
+//         }
+//     }
+    
+//     if len(stack) == 0 {
+//         fmt.Print("true")
+//     } else {
+//         fmt.Print("false")
+//     }
 // }
