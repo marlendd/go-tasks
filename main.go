@@ -1,8 +1,572 @@
 package main
 
-import (
+// import (
+// 	"hash/fnv"
+// 	"runtime"
+// 	"sync"
+// )
 
-)
+// // Нужно написать простую библиотеку in-memory cache.
+// // Для простоты считаем, что у нас бесконечная память и нам не нужно задумываться об
+// // удалении ключей из него.
+// // Реализация должна удовлетворять интерфейсу:
+
+// type Cache interface {
+// 	Set(k, v string)
+// 	Get(k string) (v string, ok bool)
+// }
+
+// var instances int = runtime.NumCPU()
+
+// type shard struct {
+// 	items map[string]string
+// 	mu sync.RWMutex
+// }
+
+// type InMemCache struct {
+// 	shards []shard
+// }
+
+// func newCache() *InMemCache {
+// 	shards := make([]shard, instances)
+// 	for i := range shards {
+// 		shards[i] = shard{
+// 			items: make(map[string]string),
+// 			mu: sync.RWMutex{},
+// 		}
+// 	}
+// 	return &InMemCache{
+// 		shards: shards,
+// 	}
+// }
+
+// func (c *InMemCache) Set(k, v string) {
+// 	shard := c.getShard(k)
+
+// 	shard.mu.Lock()
+// 	defer shard.mu.Unlock()
+
+// 	shard.items[k] = v
+// }
+
+// func (c *InMemCache) Get(k string) (v string, ok bool) {
+// 	shard := c.getShard(k)
+
+// 	shard.mu.RLock()
+// 	defer shard.mu.RUnlock()
+
+// 	val, exists := shard.items[k]
+
+// 	return val, exists
+// }
+
+// func (c *InMemCache) getShard(key string) *shard {
+// 	return &c.shards[hash(key) / uint32(len(c.shards))]
+// }
+
+// func hash(key string) uint32 {
+// 	h := fnv.New32a()
+// 	_, _ = h.Write([]byte(key))
+// 	return h.Sum32()
+// }
+
+// import (
+// 	"fmt"
+// 	"sync"
+// )
+
+// func main() {
+// 	runtime.GOMAXPROCS(1)
+// 	var wg sync.WaitGroup
+
+// 	for i := 0; i < 5; i++ {
+// 		wg.Add(1)
+// 		go func() {
+// 			defer wg.Done()
+// 			fmt.Println(i)
+// 		}()
+// 	}
+// 	wg.Wait()
+// }
+
+// import (
+// 	"bytes"
+// 	"crypto/md5"
+// 	"testing"
+// )
+
+// // У нас есть база данных с паролями пользователей, пароли захешированы (функция
+// //
+// //	hashPassword), а так же известен набор символов которые могут быть использованы в
+// //	паролях (переменная alphabet).
+// //	Наша задача реализовать функцию RecoverPassword так, чтобы она восстанавливала
+// //	пароль по известному хэшу и TestRecoverPassword завершился успешно
+// //	Базовые требования:
+// //	Решить как угодно
+// var alphabet = []rune{'a', 'b', 'c', 'd', '1', '2', '3'}
+
+// func RecoverPassword(h []byte) string {
+// 	var step int
+// 	for ; ; step++ {
+// 		guess := genPassword(step)
+// 		if bytes.Equal(hashPassword(guess), h) {
+// 			return guess
+// 		}
+// 	}
+// }
+// func genPassword(step int) (res string) {
+// 	for {
+// 		res = string(alphabet[step%len(alphabet)]) + res
+// 		step = step/len(alphabet) - 1
+// 		if step < 0 {
+// 			break
+// 		}
+// 	}
+// 	return
+// }
+// func TestRecoverPassword(t *testing.T) {
+// 	for _, exp := range []string{
+// 		"a",
+// 		"12",
+// 		"abc333d",
+// 	} {
+// 		t.Run(exp, func(t *testing.T) {
+// 			act := RecoverPassword(hashPassword(exp))
+// 			if act != exp {
+// 				t.Error("recovered:", act, "expected:", exp)
+// 			}
+// 		})
+// 	}
+// }
+// func hashPassword(in string) []byte {
+// 	h := md5.Sum([]byte(in))
+// 	return h[:]
+// }
+
+// type response struct {
+// 	ok  bool
+// 	url string
+// }
+
+// func main() {
+// 	// 	Напишите программу, которая:
+// 	// 1. Поочередно выполнит http запросы по предложенному списку ссылок
+// 	// •
+// 	// в случае получения http-кода ответа на запрос "200 OK" печатаем на экране "адрес url -
+// 	// ok"
+// 	// •
+// 	// в случае получения http-кода ответа на запрос отличного от "200 OK" либо в случае
+// 	// ошибки печатаем на экране "адрес url - not ok"
+// 	var urls = []string{
+// 		"http://ozon.ru",
+// 		"https://ozon.ru",
+// 		"http://google.com",
+// 		"http://somesite.com",
+// 		"http://non-existent.domain.tld",
+// 		"https://ya.ru",
+// 		"http://ya.ru",
+// 		"http://ёёёё",
+// 	}
+// 	client := http.Client{
+// 		Timeout: time.Second * 10,
+// 	}
+
+// 	// for _, url := range urls {
+// 	// 	resp, err := client.Get(url)
+// 	// 	if err != nil {
+// 	// 		fmt.Printf("адрес %v - not ok\n", url)
+// 	// 		continue
+// 	// 	}
+// 	// 	defer resp.Body.Close()
+// 	// 	if resp.StatusCode == http.StatusOK {
+// 	// 		fmt.Printf("адрес %v - ok\n", url)
+// 	// 	} else {
+// 	// 		fmt.Printf("адрес %v - not ok\n", url)
+// 	// 	}
+// 	// }
+// 	/*
+// 		2. Модифицируйте программу таким образом, чтобы использовались каналы для
+// 			коммуникации основного потока с горутинами. Пример:
+// 			•
+// 			Запросы по списку выполняются в горутинах.
+// 			•
+// 			Печать результатов на экран происходит в основном потоке
+// 		3. Модифицируйте программу таким образом, чтобы нигде не использовалась длина
+// 		слайса урлов. Считайте, что урлы приходят из внешнего источника. Сколько их будет
+// 		заранее - неизвестно. Предложите идиоматичный вариант, как ваша программа будет
+// 		узнавать об окончании списка и передавать сигнал об окончании действий далее.
+
+// 		4. (необязательно, можно обсудить устно, чтобы убедиться, что кандидат понимает идею
+// 		контекста, либо предложить как домашнее задание) Модифицируйте программу таким
+// 		образом, что бы при получении 2 первых ответов с "200 OK" остальные запросы штатно
+// 		прерывались.
+// 	*/
+// 	var (
+// 		wg         sync.WaitGroup
+// 		successCnt int
+// 	)
+
+// 	genUrl := make(chan string)
+// 	ch := make(chan response)
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
+
+// 	go func() {
+// 		defer close(genUrl)
+
+// 		for _, url := range urls {
+// 			select {
+// 			case <-ctx.Done():
+// 				return
+// 			case genUrl <- url:
+// 			}
+// 		}
+// 	}()
+
+// 	go func() {
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				wg.Wait()
+// 				close(ch)
+// 				return
+// 			case url, ok := <-genUrl:
+// 				if !ok {
+// 					wg.Wait()
+// 					close(ch)
+// 					return
+// 				}
+// 				wg.Add(1)
+
+// 				go func(url string) {
+// 					defer wg.Done()
+
+// 					req, err := http.NewRequestWithContext(
+// 						ctx,
+// 						"GET",
+// 						url,
+// 						nil,
+// 					)
+// 					if err != nil {
+// 						select {
+// 						case <-ctx.Done():
+// 							return
+// 						case ch <- response{ok: false, url: url}:
+// 						}
+// 						return
+// 					}
+
+// 					resp, err := client.Do(req)
+// 					if err != nil {
+// 						if ctx.Err() != nil {
+// 							return
+// 						}
+
+// 						select {
+// 						case <-ctx.Done():
+// 							return
+// 						case ch <- response{ok: false, url: url}:
+// 						}
+// 						return
+// 					}
+// 					defer resp.Body.Close()
+
+// 					result := response{
+// 						ok:  resp.StatusCode == http.StatusOK,
+// 						url: url,
+// 					}
+
+// 					select {
+// 					case ch <- result:
+// 					case <-ctx.Done():
+// 					}
+// 				}(url)
+// 			}
+// 		}
+// 	}()
+
+// 	for resp := range ch {
+// 		if resp.ok {
+// 			fmt.Printf("адрес %s - ok\n", resp.url)
+
+// 			successCnt++
+// 			if successCnt == 2 {
+// 				fmt.Println("получено 2 успешных ответа, отменяем остальные")
+// 				cancel()
+// 			}
+// 		} else {
+// 			fmt.Printf("адрес %s - not ok\n", resp.url)
+// 		}
+// 	}
+// }
+
+// Есть 3 сущности - пользователь, чат, сообщение
+// У пользователя есть имя и дата регистрации
+// У чата есть название и дата создания
+// У сообщения есть текст, автор и дата создания
+// Пользователь может состоять в нескольких чатах одновременно
+// Сообщение обязательно принадлежит чату, сообщение не может принадлежать более
+// чем 1 чату одновременно
+// Нужно описать предметную область в виде таблиц
+
+/*
+CREATE TABLE users (
+	id int PRIMARY KEY,
+	name TEXT NOT NULL,
+	registered_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE chats (
+    id int PRIMARY KEY,
+	title TEXT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE chat_users(
+	user_id int NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	chat_id int NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+
+	PRIMARY KEY(user_id, chat_id)
+);
+
+CREATE TABLE messages (
+	id int PRIMARY KEY,
+	text TEXT NOT NULL,
+	chat_id int NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+	author_id int NOT NULL REFERENCES users (id),
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+SELECT c.chat_id, c.title
+FROM users u
+JOIN user_chats uc on u.id = uc.user_id,
+	 chats c ON c.id = us.chat_id
+WHERE u.name = 'Вася';
+
+
+SELECT user_id, count(*) AS order_count
+FROM orders
+GROUP BY user_id
+HAVING price_total >= 1000
+ORDER BY 2 DESC
+*/
+
+// func f(n int) (r int) {
+// 	a, r := n-1, n+1 // 2 4
+// 	if a+a == r {
+// 		c, r := n, n*n // 3 16
+// 		r = r - c //
+// 	}
+// 	return r
+// }
+
+// func main() {
+// 	println(f(3))
+// }
+
+// package main
+
+// import "unsafe"
+
+// func main() {
+//     var S = "go" // S[1]-S[0] == 8
+// 	var x *[8][8]byte
+// 	println(unsafe.Sizeof((*x)[S[1]-S[0]][S[1]-S[0]]))
+// }
+
+// package main
+
+// const X = '\x61' // 'a'
+// const Y = 0x62
+// const A = Y - X // 1
+// const B int64 = 1
+
+// var n = 32
+
+// func main() {
+// 	if A == B {
+// 		println(A << n >> n, B << n >> n)
+// 	}
+// }
+
+// package main
+
+// const (
+// 	A, _ = iota, iota
+// 	_, _
+// 	_, B
+// )
+
+// func main() {
+// 	println(A, B)
+// }
+
+// package main
+
+// import ()
+
+// func main() {
+// 	// defer func() {
+// 	// 	fmt.Print(recover())
+// 	// }()
+// 	// defer func() {
+// 	// 	defer fmt.Print(recover())
+// 	// 	defer panic(1)
+// 	// 	recover()
+// 	// }()
+// 	defer recover()
+// 	panic(2)
+// }
+
+// package main
+
+// type Foo struct {
+// 	v int
+// }
+
+// func MakeFoo(n *int) Foo {
+// 	print(*n)
+// 	return Foo{}
+// }
+
+// func (Foo) Bar(n *int) {
+// 	print(*n)
+// }
+
+// func main() {
+// 	var x = 1
+// 	var p = &x
+// 	defer MakeFoo(p).Bar(p) // line 19
+// 	x = 2
+// 	p = new(int) // line 21
+// 	MakeFoo(p)
+// }
+
+// package main
+
+// func main() {
+// 	i, s := 9, []int{}
+
+// 	for i = range s {}
+// 	print(i) // 9
+
+// 	for i = 0; i < len(s); i++ {}
+// 	print(i) // 0
+
+// 	s = append(s, 1, 2, 3, 4, 5)
+
+// 	for i = range s {}
+// 	print(i) // 4
+
+// 	for i = 0; i < len(s); i++ {}
+// 	println(i)// 5
+// }
+
+// package main
+
+// func f() {
+// 	var a = [2]int{5, 7}
+// 	for i, v := range a {
+// 		if i == 0 {
+// 			a[1] = 9
+// 		} else {
+// 			print(v) // 7
+// 		}
+// 	}
+// }
+
+// func g() {
+// 	var a = [2]int{5, 7}
+// 	for i, v := range a[:] { // making slice which references a
+// 		if i == 0 {
+// 			a[1] = 9
+// 		} else {
+// 			print(v) // 9
+// 		}
+// 	}
+// }
+
+// func main() {
+// 	f()
+// 	g()
+// }
+
+// package main
+
+// func main() {
+// 	x := []int{7, 8, 9}
+// 	y := [3]*int{}
+// 	for i, v := range x {
+// 		defer func() {
+// 			print(v)
+// 		}()
+// 		y[i] = &i
+// 	}
+// 	print(*y[0], *y[1], *y[2], " ") // 012
+// }
+
+// package main
+
+// func main() {
+// 	var x = []string{"A", "B", "C"}
+
+// 	for i, s := range x {
+// 		print(i, s, ",") // 0A,1M,2С
+// 		x[i+1] = "M"
+//         // [AMC]
+//         // [AMС]
+// 		x = append(x, "Z")
+//         // new array x=[AMCZ]
+// 		x[i+1] = "Z"
+//         // x=[AZCZ] does not affect range copy anymore
+// 	}
+// }
+
+// package main
+
+// import "fmt"
+
+// func main() {
+// 	a := [...]int{0, 1, 2, 3}
+// 	x := a[:1] // [0] l1 c4
+// 	y := a[2:] // [2, 3] l2 c4
+// 	x = append(x, y...) // [0, 2, 3] l3 c4 a -> [0, 2, 3, 3] y -> [3, 3]
+// 	x = append(x, y...) // [0, 2, 3, 3, 3] -> new array l5 c 8
+// 	fmt.Println(a, x) // 0 2 3 3   0 2 3 3 3
+// }
+
+// type Metric struct {
+// 	Value int
+// }
+
+// func calculate() (m *Metric) {
+// 	m = &Metric{Value: 10}
+
+// 	// Стек деферов
+// 	defer func() {
+// 		m.Value += 5
+// 	}()
+
+// 	defer func(m *Metric) {
+// 		m.Value *= 2
+// 	}(m)
+
+// 	// Цикл с деферами
+// 	for i := 0; i < 2; i++ {
+// 		defer func() {
+// 			m.Value += i
+// 		}()
+// 	}
+
+// 	m = &Metric{Value: 100}
+
+// 	return
+// }
+
+// func main() {
+// 	result := calculate()
+// 	fmt.Println("Final Metric Value:", result.Value)
+// }
 
 //import "fmt"
 
@@ -6294,8 +6858,6 @@ import (
 //     return l + 1
 // }
 
-
-
 // func main() {
 // 	in := bufio.NewReader(os.Stdin)
 //     var s string
@@ -6308,7 +6870,7 @@ import (
 // 		']': '[',
 // 		'}': '{',
 // 	}
-    
+
 //     // {[{(())}]}
 //     for _, ch := range s {
 //         switch ch {
@@ -6330,7 +6892,7 @@ import (
 //             stack = stack[:len(stack)-1]
 //         }
 //     }
-    
+
 //     if len(stack) == 0 {
 //         fmt.Print("true")
 //     } else {
