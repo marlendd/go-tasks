@@ -1,5 +1,334 @@
 package main
 
+import (
+	"fmt"
+	"math/rand"
+)
+
+// генерирует слайс длины n уникальных, рандомных чисел
+func uniqRandn(n int) []int {
+	res, resMap := make([]int, 0, n), make(map[int]struct{}, n)
+
+	for len(res) < n {
+		num := rand.Int()
+		if _, exists := resMap[num]; !exists {
+			res = append(res, num)
+			resMap[num] = struct{}{}
+		}
+	}
+
+	return res
+}
+
+func zip(slices ...[]int) [][]int {
+	if len(slices) == 0 {
+		return [][]int{}
+	}
+	minLen := len(slices[0])
+	for _, slice := range slices {
+		if len(slice) < minLen {
+			minLen = len(slice)
+		}
+	}
+
+	res := make([][]int, 0, minLen)
+
+	for i := range minLen {
+		iSlice := make([]int, 0, len(slices))
+		for _, v := range slices {
+			iSlice = append(iSlice, v[i])
+		}
+		res = append(res, iSlice)
+	}
+
+	return res
+}
+
+func removeZeros(in []int) []int {
+	i := 0
+	j := 0
+
+	for ; i < len(in); i++ {
+		if in[i] != 0 {
+			in[j] = in[i]
+			j++
+		}
+	}
+
+	return in[:j]
+}
+
+// {1,7} - true
+// {1,1} - true
+// {3,0,3,1} - true
+// {9,5,1} - true
+// {23,5,23} - false
+func isMonotonic(vals []int) bool {
+	if len(vals) == 0 {
+		return false
+	}
+
+	if len(vals) == 1 {
+		return true
+	}
+	var asc, desc bool
+
+	for i := 0; i < len(vals)-1; i++ {
+		if vals[i] > vals[i+1] {
+			desc = true
+		}
+		if vals[i] < vals[i+1] {
+			asc = true
+		}
+		if asc && desc {
+			return false
+		}
+	}
+
+	return true
+}
+
+func lengthOfLongestSubstring(s string) int {
+    left := 0
+    last := make(map[byte]int)
+	maxLen := 0
+
+    for right := 0; right < len(s); right++ {
+		ch := s[right]
+        if pos, exists := last[ch]; exists && pos >= left {
+			left = pos + 1
+		}
+
+		last[ch] = right
+		maxLen = max(maxLen, right-left+1)
+    }
+    
+    return maxLen
+}
+
+func merge(nums1 []int, m int, nums2 []int, n int)  {
+    i, j := 0, 0
+    res := make([]int, 0, m+n)
+
+    for i < m && j < n {
+        if nums1[i] <= nums2[j] {
+            res = append(res, nums1[i])
+            i++
+        } else {
+            res = append(res, nums2[j])
+            j++
+        }
+    }
+
+    for i < m {
+        res = append(res, nums1[i])
+        i++
+    }
+
+    for j < n {
+        res = append(res, nums2[j])
+        j++
+    }
+
+    nums1 = res
+}
+
+func a() {
+	x := []int{} // l0c0
+	x = append(x, 0) // l1c1
+	x = append(x, 1) //l2c2
+	x = append(x, 2) //l3 c4
+	y := append(x, 3) // y:l4 c4 x:l3 c4
+	z := append(x, 4) //z: l4 c4 x: l3 c4
+	fmt.Println(y, z) // [0,1,2,4] [0,1,2,4] 
+}
+func main() {
+	a()
+}
+
+// {1,7} - true
+// {1,1} - true
+// {3,3,1} - true
+// {9,5,1} - true
+// {23,5,23} - false
+// func main() {
+// 	// fmt.Println(isMonotonic([]int{1, 7}))
+// 	// fmt.Println(isMonotonic([]int{1, 1}))
+// 	// fmt.Println(isMonotonic([]int{3, 3, 1}))
+// 	// fmt.Println(isMonotonic([]int{9, 5, 1}))
+// 	// fmt.Println(isMonotonic([]int{23, 5, 23}))
+// 	// s1, s2 := []int{1, 2, 3}, []int{4, 5, 6, 7, 8}
+// 	// fmt.Println(zip(s1, s2)) // [[1 4] [2 5] [3 6]]
+// 	// fmt.Println(uniqRandn(10))
+
+// }
+
+// type Foo struct{}
+
+// func (f *Foo) A() {}
+// func (f *Foo) B() {}
+// func (f *Foo) C() {}
+
+// type AB interface {
+// 	A()
+// 	B()
+// }
+// type BC interface {
+// 	B()
+// 	C()
+// }
+
+// func main() {
+// 	var f AB = &Foo{}
+// 	y := f.(BC) // сработает ли такой type-assertion?
+// 	y.A()       // а этот вызов?
+// 	_ = y
+// }
+
+// Есть база с такой схемой данных
+
+// // user
+// id | firstname | lastname | birth
+// 1 | Ivan | Petrov | 1996-05-01
+// 2 | Anna | Petrova | 1999-06-01
+// 3 | Anna | Petrova | 1990-10-02
+
+// // purchase
+// sku| price | user_id | date
+// 1 | 5500 | 1 | 2021-02-15
+// 1 | 5700 | 1 | 2021-01-15
+// 2 | 4000 | 1 | 2021-02-14
+// 3 | 8000 | 2 | 2021-03-01
+// 4 | 400 | 2 | 2021-03-02
+
+// // ban_list
+// user_id | date_from
+// 1 | 2021-03-08
+// Нужно вывести:
+// 1.
+// Вывести уникальные комбинации пользователя и id товара для всех покупок,
+// совершенных пользователями до того, как их забанили. Отсортировать сначала по
+// имени пользователя, потом по SKU
+// 2.
+// Найти пользователей, которые совершили покупок на сумму больше 5000р. Вывести их
+// имена в формате id пользователя | имя | фамилия | сумма покупок
+/*
+	SELECT DISTINCT u.id, u.firstname, u.lastname, p.sku
+	FROM purchase p
+		JOIN user u ON p.user_id = u.id
+		LEFT JOIN ban_list bl ON bl.user_id = u.id
+	-- WHERE p.date < COALESCE(bl.date_from, now())
+	WHERE bl.date_from IS NULL
+		OR p.date < bl.date_from
+	ORDER BY u.firstname, p.sku;
+
+	SELECT u.id, u.firstname, u.lastname, SUM(p.price)
+	FROM purchase p
+		JOIN user u ON u.id = p.user_id
+	GROUP BY 1, 2, 3
+	HAVING SUM(p.price) > 5000
+*/
+
+// import "fmt"
+
+// func main() {
+// 	m := map[string]int{"a": 1, "b": 2, "c": 3}
+// 	for a, b := range m {
+// 		fmt.Println(a, b)
+// 	}
+// }
+
+// import (
+// 	"log"
+// 	"os"
+// 	"runtime/pprof"
+// )
+
+// func main() {
+// 	f, err := os.Create("cpu.pprof")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer f.Close()
+
+// 	if err := pprof.StartCPUProfile(f); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer pprof.StopCPUProfile()
+
+// 	cpuWork()
+// }
+
+// func cpuWork() {
+// 	sum := 0
+// 	for i := 0; i < 500_000_000; i++ {
+// 		sum += i % 7
+// 	}
+// }
+
+// package main
+
+// type customError struct {
+// 	msg string
+// }
+
+// func (c *customError) Error() string {
+// 	return c.msg
+// }
+
+// func main() {
+// 	println(handle())
+// }
+// func handle() error {
+// 	return &customError{
+// 		msg: "my custom error",
+// 	}
+// }
+
+// import "sync"
+
+// func merge(cs ...<-chan int) <-chan int {
+// 	resCh := make(chan int)
+// 	var wg sync.WaitGroup
+
+// 	go func() {
+// 		for _, c := range cs {
+// 			go func() {
+// 				defer wg.Done()
+
+// 				for val := range c {
+// 					resCh <- val
+// 				}
+// 			}()
+// 		}
+// 	}()
+
+// 	go func() {
+// 		wg.Wait()
+// 		close(resCh)
+// 	}()
+
+// 	return resCh
+// }
+
+// type Storage struct {
+// 	cache *lru.Cache
+// }
+
+// func (s *Storage) Set(wh *warehouse.Warehouse) {
+// 	s.cache.Put(wh.Id, wh)
+// }
+
+// func (s *Storage) Get(id types.WarehouseId) *warehouse.Warehouse {
+// 	item, ok := s.cache.Get(id)
+// 	if ok {
+// 		if wh, ok := item.(*warehouse.Warehouse); ok {
+// 			return wh
+// 		}
+// 	}
+// 	return nil
+// }
+
 // import (
 // 	"hash/fnv"
 // 	"runtime"
