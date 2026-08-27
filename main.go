@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
+	"slices"
+	"strings"
+	"unicode"
 )
 
 // генерирует слайс длины n уникальных, рандомных чисел
@@ -88,62 +92,228 @@ func isMonotonic(vals []int) bool {
 	return true
 }
 
+func isPalindrome(s string) bool {
+	s = strings.Map(
+		func(r rune) rune {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+				return r
+			}
+			return -1
+		},
+		s,
+	)
+
+	sRune := []rune(s)
+	l, r := 0, len(sRune)-1
+
+	for l < r {
+		if unicode.ToLower(sRune[l]) != unicode.ToLower(sRune[r]) {
+			return false
+		}
+		l++
+		r--
+	}
+
+	return true
+}
+
 func lengthOfLongestSubstring(s string) int {
-    left := 0
-    last := make(map[byte]int)
+	left := 0
+	last := make(map[byte]int)
 	maxLen := 0
 
-    for right := 0; right < len(s); right++ {
+	for right := 0; right < len(s); right++ {
 		ch := s[right]
-        if pos, exists := last[ch]; exists && pos >= left {
+		if pos, exists := last[ch]; exists && pos >= left {
 			left = pos + 1
 		}
 
 		last[ch] = right
 		maxLen = max(maxLen, right-left+1)
-    }
-    
-    return maxLen
+	}
+
+	return maxLen
 }
 
-func merge(nums1 []int, m int, nums2 []int, n int)  {
-    i, j := 0, 0
-    res := make([]int, 0, m+n)
+func merge(nums1 []int, m int, nums2 []int, n int) {
+	i, j := 0, 0
+	res := make([]int, 0, m+n)
 
-    for i < m && j < n {
-        if nums1[i] <= nums2[j] {
-            res = append(res, nums1[i])
-            i++
-        } else {
-            res = append(res, nums2[j])
-            j++
-        }
-    }
+	for i < m && j < n {
+		if nums1[i] <= nums2[j] {
+			res = append(res, nums1[i])
+			i++
+		} else {
+			res = append(res, nums2[j])
+			j++
+		}
+	}
 
-    for i < m {
-        res = append(res, nums1[i])
-        i++
-    }
+	for i < m {
+		res = append(res, nums1[i])
+		i++
+	}
 
-    for j < n {
-        res = append(res, nums2[j])
-        j++
-    }
+	for j < n {
+		res = append(res, nums2[j])
+		j++
+	}
 
-    nums1 = res
+	nums1 = res
 }
 
 func a() {
-	x := []int{} // l0c0
-	x = append(x, 0) // l1c1
-	x = append(x, 1) //l2c2
-	x = append(x, 2) //l3 c4
+	x := []int{}      // l0c0
+	x = append(x, 0)  // l1c1
+	x = append(x, 1)  //l2c2
+	x = append(x, 2)  //l3 c4
 	y := append(x, 3) // y:l4 c4 x:l3 c4
 	z := append(x, 4) //z: l4 c4 x: l3 c4
-	fmt.Println(y, z) // [0,1,2,4] [0,1,2,4] 
+	fmt.Println(y, z) // [0,1,2,4] [0,1,2,4]
 }
+
+// func sortedSquares(nums []int) []int {
+//     res := make([]int, 0, len(nums))
+//     minSquarePos := 0
+
+//     for i := range nums {
+//         if nums[i]*nums[i] < nums[minSquarePos]*nums[minSquarePos] {
+//             minSquarePos = i
+//         }
+//     }
+// 	res = append(res, nums[minSquarePos]*nums[minSquarePos])
+
+//     l, r := minSquarePos-1, minSquarePos+1
+//     for l >= 0 && r < len(nums) {
+//         lNum, rNum := nums[l]*nums[l], nums[r]*nums[r]
+//         if lNum <= rNum {
+//             res = append(res, lNum)
+//             l--
+//         } else {
+//             res = append(res, rNum)
+//             r++
+//         }
+//     }
+
+// 	for l >= 0 {
+// 		lNum := nums[l]*nums[l]
+// 		res = append(res, lNum)
+//         l--
+// 	}
+
+// 	for r < len(nums) {
+// 		rNum := nums[r]*nums[r]
+// 		res = append(res, rNum)
+//         r++
+// 	}
+
+//     return res
+// }
+
+func sortedSquares(nums []int) []int {
+	if len(nums) == 0 {
+		return []int{}
+	}
+
+	res := make([]int, len(nums))
+	l, r := 0, len(nums)-1
+	k := len(nums) - 1
+
+	for l <= r {
+		lSqr := nums[l] * nums[l]
+		rSqr := nums[r] * nums[r]
+
+		if lSqr >= rSqr {
+			res[k] = lSqr
+			l++
+		} else {
+			res[k] = rSqr
+			r--
+		}
+		k--
+	}
+
+	return res
+}
+
+func threeSum(nums []int) [][]int {
+	slices.Sort(nums)
+	var res [][]int
+
+	for i := 0; i < len(nums)-2; i++ {
+		if i > 0 && nums[i-1] == nums[i] {
+			continue
+		}
+
+		l := i + 1
+		r := len(nums) - 1
+
+		for l < r {
+			sum := nums[i] + nums[l] + nums[r]
+
+			if sum > 0 {
+				r--
+			} else if sum < 0 {
+				l++
+			} else {
+				res = append(res, []int{
+					nums[i],
+					nums[l],
+					nums[r],
+				})
+				r--
+				l++
+
+				for l < r && nums[r] == nums[r+1] {
+					r--
+				}
+
+				for l < r && nums[l] == nums[l-1] {
+					l++
+
+				}
+			}
+		}
+	}
+
+	return res
+}
+
+func threeSumClosest(nums []int, target int) int {
+    if len(nums) < 3 {
+        return 0
+    }
+    slices.Sort(nums)
+	res := nums[0]+nums[1]+nums[2]
+
+    for i := 0; i < len(nums)-2; i++ {
+        l := i + 1
+        r := len(nums) - 1
+
+        for l < r {
+            sum := nums[i] + nums[l] + nums[r]
+
+			if sum == target {
+				return sum
+			}
+
+            if math.Abs(float64(target-sum)) < math.Abs(float64(target-res)) {
+				res = sum
+            }
+            
+			if sum > target {
+				r--
+			} else {
+				l++
+			}
+        }
+    }
+
+    return res
+}
+
 func main() {
-	a()
+	fmt.Println(threeSumClosest([]int{-1,2,1,-4}, 1)) // Expected 2
 }
 
 // {1,7} - true
