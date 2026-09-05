@@ -280,40 +280,281 @@ func threeSum(nums []int) [][]int {
 }
 
 func threeSumClosest(nums []int, target int) int {
-    if len(nums) < 3 {
-        return 0
-    }
-    slices.Sort(nums)
-	res := nums[0]+nums[1]+nums[2]
+	if len(nums) < 3 {
+		return 0
+	}
+	slices.Sort(nums)
+	res := nums[0] + nums[1] + nums[2]
 
-    for i := 0; i < len(nums)-2; i++ {
-        l := i + 1
-        r := len(nums) - 1
+	for i := 0; i < len(nums)-2; i++ {
+		l := i + 1
+		r := len(nums) - 1
 
-        for l < r {
-            sum := nums[i] + nums[l] + nums[r]
+		for l < r {
+			sum := nums[i] + nums[l] + nums[r]
 
 			if sum == target {
 				return sum
 			}
 
-            if math.Abs(float64(target-sum)) < math.Abs(float64(target-res)) {
+			if math.Abs(float64(target-sum)) < math.Abs(float64(target-res)) {
 				res = sum
-            }
-            
+			}
+
 			if sum > target {
 				r--
 			} else {
 				l++
 			}
+		}
+	}
+
+	return res
+}
+
+func intervalIntersection(firstList [][]int, secondList [][]int) [][]int {
+	i := 0
+	j := 0
+	var res [][]int
+
+	for i < len(firstList) && j < len(secondList) {
+		if firstList[i][1] < secondList[j][0] {
+			i++
+			continue
+		}
+
+		if firstList[i][0] > secondList[j][1] {
+			j++
+			continue
+		}
+
+		if firstList[i][0] < secondList[j][0] {
+			if firstList[i][1] < secondList[j][1] {
+				res = append(res, []int{
+					secondList[j][0],
+					firstList[i][1],
+				})
+				i++
+			} else {
+				res = append(res, []int{
+					secondList[j][0],
+					secondList[j][1],
+				})
+				j++
+			}
+			continue
+		}
+
+		if firstList[i][0] >= secondList[j][0] {
+			if firstList[i][1] < secondList[j][1] {
+				res = append(res, []int{
+					firstList[i][0],
+					firstList[i][1],
+				})
+				i++
+			} else {
+				res = append(res, []int{
+					firstList[i][0],
+					secondList[j][1],
+				})
+				j++
+			}
+			continue
+		}
+	}
+
+	return res
+}
+
+func findMaxAverage(nums []int, k int) float64 {
+	curSum := 0.0
+
+	for i := range k {
+		curSum += float64(nums[i])
+	}
+	maxWindowAvg := float64(curSum) / float64(k)
+
+	for r := k; r < len(nums); r++ {
+		l := r - k
+
+		curSum += float64(nums[r] - nums[l])
+		maxWindowAvg = max(maxWindowAvg, curSum/float64(k))
+	}
+
+	return maxWindowAvg
+}
+
+func isVowel(c byte) bool {
+	return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u'
+}
+
+func maxVowels(s string, k int) int {
+	vowels := 0
+
+	for i := range k {
+		if isVowel(s[i]) {
+			vowels++
+		}
+	}
+	maxVowels := vowels
+
+	for r := k; r < len(s); r++ {
+		l := r - k
+		if isVowel(s[l]) {
+			vowels--
+		}
+		if isVowel(s[r]) {
+			vowels++
+		}
+		maxVowels = max(maxVowels, vowels)
+
+	}
+
+	return maxVowels
+}
+
+func numOfSubarrays(arr []int, k int, threshold int) int {
+	windowSum := 0
+	res := 0
+
+	for i := range k {
+		windowSum += arr[i]
+	}
+	if windowSum / k >= threshold {
+		res++
+	}
+
+	for r := k; r < len(arr); r++ {
+		l := k - r
+
+		windowSum += arr[r] - arr[l]
+		if windowSum / k >= threshold {
+			res++
+		}
+	}
+
+	return res
+}
+
+func countGoodSubstrings(s string) int {
+	if len(s) < 3 {
+		return 0
+	}
+
+    k := 3
+    letters := make(map[byte]int)
+    res := 0
+	distinct := 0
+
+    for i := range k {
+        if _, exists := letters[s[i]]; !exists {
+            letters[s[i]] = 1
+            distinct++
+        } else {
+            letters[s[i]]++
         }
     }
 
-    return res
+    if distinct == k {
+            res++
+    }
+
+	for r := k; r < len(s); r++ {
+		l := r - k
+		if count := letters[s[l]]; count == 1 {
+			distinct--
+		}
+		letters[s[l]]--
+
+		if letters[s[r]] == 0 {
+            distinct++
+        } 
+		letters[s[r]]++
+
+        if distinct == k {
+            res++
+        }
+	}
+
+	return res
+}
+
+func isPermutation(s1Letters, s2Letters map[byte]int) bool {
+    for k, v := range s1Letters {
+        if s2Letters[k] != v {
+			return false
+		}
+    }
+    return true
+}
+
+func checkInclusionOld(s1 string, s2 string) bool {
+    s1Letters := make(map[byte]int)
+    for _, c := range s1 {
+        s1Letters[byte(c)]++
+    }
+
+    k := len(s1)
+    s2Letters := make(map[byte]int)
+
+    for i := range k {
+        s2Letters[s2[i]]++
+
+        if i == k-1 {
+            if isPermutation(s1Letters, s2Letters) {
+                return true
+            }
+        }
+    }
+
+    for r := k; r < len(s2); r++ {
+        l := r - k
+        s2Letters[s2[l]]--
+
+        s2Letters[s2[r]]++
+
+        if isPermutation(s1Letters, s2Letters) {
+                return true
+        }
+    }
+ 
+    return false
+}
+
+func checkInclusion(s1 string, s2 string) bool {
+    if len(s1) > len(s2) {
+        return false
+    }
+
+    var need [26]int
+    var window [26]int
+    k := len(s1)
+
+    for i := range k {
+        need[s1[i]-'a']++
+        window[s2[i]-'a']++
+    }
+
+    if window == need {
+        return true
+    }
+
+    for r := k; r < len(s2); r++ {
+        l := r - k
+        window[s2[l]-'a']--
+
+        window[s2[r]-'a']++
+
+        if window == need {
+            return true
+        }
+    }
+ 
+    return false
 }
 
 func main() {
-	fmt.Println(threeSumClosest([]int{-1,2,1,-4}, 1)) // Expected 2
+	fmt.Println(threeSumClosest([]int{-1, 2, 1, -4}, 1)) // Expected 2
 }
 
 // {1,7} - true
