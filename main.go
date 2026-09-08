@@ -1,13 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
 	"slices"
+	"sort"
 	"strings"
 	"unicode"
 )
+
+type User string
+
+type UserRepository interface {
+    Get(context.Context, int64) (User, error)
+}
 
 // генерирует слайс длины n уникальных, рандомных чисел
 func uniqRandn(n int) []int {
@@ -551,6 +559,191 @@ func checkInclusion(s1 string, s2 string) bool {
     }
  
     return false
+}
+
+func lengthOfLongestSubstringNew(s string) int {
+    l := 0
+    var letters [256]int
+    maxLen := 0
+
+    for r := range s {
+        ch := s[r]
+        if letters[ch]+1 > l {
+            l = letters[ch]
+        }
+
+        letters[ch] = r
+        maxLen = max(maxLen, r-l+1)
+    }
+    return maxLen
+}
+
+func isPalindromePermutation(s string) bool {
+	freqs := make(map[rune]int)
+	oddCount := 0
+
+	for _, c := range s {
+		if unicode.IsSpace(c) {
+			continue
+		}
+		
+		c = unicode.ToLower(c)
+		freqs[c]++
+
+		if freqs[c] % 2 == 1 {
+			oddCount++
+		} else {
+			oddCount--
+		}
+	}
+
+	return oddCount <= 1
+}
+
+func isAnagram(s string, t string) bool {
+	if len(s) != len(t) {
+		return false
+	}
+
+    var freqs [26]int
+
+    for i := range s {
+        freqs[s[i]-'a']++
+		freqs[t[i]-'a']--
+    }
+
+	for _, f := range freqs {
+		if f != 0 {
+			return false
+		}
+	}
+
+    return true
+}
+
+// func topKFrequent(nums []int, k int) []int {
+//     freqs := make(map[int]int) 
+// 	sort.Sl
+//     for _, num := range nums {
+//         freqs[num]++
+//     }
+
+//     unique := make([]int, 0, len(freqs))
+
+// 	for num := range freqs {
+// 		unique = append(unique, num)
+// 	}
+
+// 	sort.Slice(unique, func(i, j int) bool {
+// 		return freqs[unique[i]] > freqs[unique[j]]
+// 	})
+
+// 	return unique[:k]
+// }
+
+func countMeetingRooms(segments [][]int) int {
+	points := make([][]int, 0, len(segments)*2)
+	
+	for _, s := range segments {
+		points = append(points,
+			[]int{s[0], 1},
+			[]int{s[1], -1},
+		)
+	}
+
+	sort.Slice(points, func(i, j int) bool {
+		if points[i][0] == points[j][0] {
+			return points[i][1] < points[j][1]
+		}
+		return points[i][0] < points[j][0]
+	})
+
+	maxRooms := 0
+	curRooms := 0
+
+	for _, point := range points {
+		curRooms += point[1]
+		maxRooms = max(maxRooms, curRooms)
+	}
+	return maxRooms
+}
+
+func searchLast(nums []int, target int) int {
+	l := -1
+	r := len(nums)
+
+	for r-l > 1 {
+		m := l + (r-l)/2
+
+		if nums[m] <= target {
+			l = m
+		} else {
+			r = m
+		}
+	}
+
+	if l >= 0 && nums[l] == target {
+		return l
+	}
+	return -1
+}
+// ({[]})
+func searchLast2(nums []int, target int) int {
+	l := 0
+	r := len(nums)-1
+	res := -1
+
+	for l <= r {
+		m := l + (r-l)/2
+
+		if nums[m] == target {
+			res = m
+			l = m + 1
+		} else if nums[m] < target {
+			l = m + 1
+		} else {
+			r = m - 1
+		}
+	}
+
+	return res
+}
+
+
+func searchRange(nums []int, target int) []int {
+    l := 0
+    r := len(nums)
+	res := []int{-1, -1}
+
+    for r-l > 1 {
+        m := l + (r-l)/2
+        if nums[m] <= target {
+            l = m
+        } else {
+            r = m
+        }
+    }
+    if nums[l] == target {
+        res[1] = l
+    }
+
+    l = 0
+    r = len(nums)
+
+    for r-l > 1 {
+        m := l + (r-l)/2
+
+        if nums[m] < target {
+            l = m
+        } else {
+            r = m
+        }
+    }
+    if nums[l] == target {
+        res[0] = l
+    }
+
+    return res
 }
 
 func main() {
